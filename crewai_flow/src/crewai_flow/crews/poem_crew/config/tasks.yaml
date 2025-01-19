@@ -1,0 +1,9 @@
+request_routing_agent_task:
+  description: >
+    - Our chatbot has received a This Query {query}. We need to decide which Crew to pass this query to for the best response
+    - Crew must be one of the following ["customer service", "simple chat", "complete the form"]
+    - each Crew has a different area of expertise and will give a different response to the same query.
+    - We need to decide which Crew to pass this query to for the best response.
+  expected_output: >
+    pydantic Model with the Crew name.
+  agent: request_routing_agent
