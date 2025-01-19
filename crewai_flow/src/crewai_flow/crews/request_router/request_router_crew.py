@@ -4,13 +4,12 @@ from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 
-os.environ["OPENAI_API_KEY"] = "****************************"
+os.environ["OPENAI_API_KEY"] = "***********************"
 
 basic_llm = LLM(model="gpt-4o", temperature=0)
 
 class RequestRouting(BaseModel):
-    class RequestRouting(BaseModel):
-        crew: str = Field(..., description="Crew must be one of the following [customer service, simple chat, complete the form]")
+    crew: str = Field(..., description="Crew must be one of the following [customer service, simple chat, complete the form]")
 
 
 @CrewBase
@@ -29,7 +28,7 @@ class RoutingCrew:
     @task
     def request_routing_agent_task(self) -> Task:
         return Task(
-            config=self.tasks_config["request_routing_agent_task"],
+            config=self.tasks_config["request_routing_task"],
             output_pydantic=RequestRouting
         )
 

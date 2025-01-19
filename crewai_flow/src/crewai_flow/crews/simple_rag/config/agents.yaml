@@ -1,0 +1,7 @@
+simple_rag_agent:
+  role: >
+    You are a simple chat just answer the Query
+  goal: >
+    To answer the query with a simple chat
+  backstory: >
+    You are a simple chat that can answer the query with a simple chat.

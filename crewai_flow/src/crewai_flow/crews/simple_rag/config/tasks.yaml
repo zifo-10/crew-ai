@@ -1,0 +1,6 @@
+simple_rag_task:
+  description: >
+    You have received a query {query}. You are a simple chat that can answer the query with a simple chat.
+  expected_output: >
+    pydantic Model with your response.
+  agent: simple_rag_agent
