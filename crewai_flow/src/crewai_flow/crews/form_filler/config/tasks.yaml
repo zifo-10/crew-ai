@@ -1,0 +1,30 @@
+form_filler_task:
+  description: >
+    Your task is to accurately collect and fill out the form based on the user's provided information.  
+    The form includes the following fields:  
+      - Name  
+      - Email  
+      - Phone  
+      - Address  
+      - City  
+      - State  
+      - Zip  
+      - Country  
+
+    **Process:**  
+    - Extract relevant details from the user's messages.  
+    - If any required information is missing, ask follow-up questions in a natural and friendly manner.  
+    - Validate the information for accuracy (e.g., checking if an email is properly formatted).  
+    - Ensure the form is filled out completely and professionally.  
+    - Once all fields are populated, summarize the filled form and request final confirmation from the user.  
+
+    **Context:**  
+    - The last user message is: {last_message}  
+    - The full chat history contains: {list_messages}  
+
+  expected_output: >
+    A Pydantic model containing:  
+    - The next question if the form is incomplete.  
+    - A flag (`form_filled: True/False`) indicating whether the form is fully completed.  
+
+  agent: form_filler_agent

@@ -1,60 +1,99 @@
 #!/usr/bin/env python
 import json
 
-from crewai.flow.flow import Flow, start, router, listen
-from pydantic import BaseModel, Field
+from crewai.flow.flow import Flow, start
+from pydantic import BaseModel
 
-from crewai_flow.src.crewai_flow.crews.request_router.request_router_crew import RoutingCrew
+from crewai_flow.src.crewai_flow.crews.form_filler.form_filler_crew import FormFillerCrew
+from crewai_flow.src.crewai_flow.crews.orchestrator.orchestrator_crew import OrchestratorCrew
 from crewai_flow.src.crewai_flow.crews.simple_rag.simple_rag_crew import SimpleRagCrew
 
 
 class ExampleState(BaseModel):
-    crew: str = ""
+    form_filler: bool = False
+
 
 class RagFlow(Flow[ExampleState]):
 
     @start()
-    def request_router(self):
-        result = (
-            RoutingCrew()
-            .crew()
-            .kickoff(inputs={
-                "query": "how to be in this competition?"
-            })
-        )
-        result_dict = json.loads(result.raw)
-        if  str(result_dict["crew"]) == 'customer service':
-            self.state.crew = 'customer service'
-        elif str(result_dict["crew"]) == 'complete the form':
-            self.state.crew = "complete the form"
+    def orchestrator(self):
+        """
+        Main entry point: Determines whether to continue form filling or process a new request.
+        """
+        if self.state.form_filler:
+            print("[INFO] Continuing form filling process...")
+            return self.continue_form_filling()
+
+        inputs = {
+            "query": "i want to schedule a meeting",
+            "list_messages": ["when i can see you", "i want to meet you", "can we meet today"]
+        }
+
+        print("[INFO] Sending request to OrchestratorCrew...")
+        orchestrator_result = OrchestratorCrew().crew().kickoff(inputs=inputs)
+        result_dict = json.loads(orchestrator_result.raw)
+
+        next_crew = result_dict.get("next_crew")
+
+        if next_crew == "form filler":
+            self.state.form_filler = True
+            return self.continue_form_filling(
+            )
+
+        elif next_crew == "simple chat":
+            return self.process_simple_chat(
+                translated_query=result_dict.get("processed_query", {}).get("translated_query", ""),
+                similar_queries=result_dict.get("processed_query", {}).get("similar_queries", [])
+            )
+
+        print("[WARNING] No valid crew identified. Defaulting to simple chat.")
+        return self.process_simple_chat(translated_query=inputs["query"], similar_queries=[])
+
+    def continue_form_filling(self):
+        """
+        Handles the form-filling process until completion.
+        """
+        print("[INFO] Starting form-filling process...")
+        form_filler_result = FormFillerCrew().crew().kickoff()
+        # Check if the result is already a dictionary
+        form_filler_dict = json.loads(form_filler_result.raw)
+
+        # Process the form filling result
+        if form_filler_dict.get("form_filled"):
+            print("[SUCCESS] Form completed. Proceeding to email sending...")
+            self.state.form_filler = False
+            return self.send_email()
+
+        next_question = form_filler_dict.get("next_question")
+
+        if next_question:
+            print(f"[INFO] Asking next question: {next_question}")
         else:
-            self.state.crew = "simple chat"
+            print("[ERROR] No next question found in the response.")
+            return {"error": "No next question found in the response."}
 
-    @router(request_router)
-    def second_method(self):
-        return self.state.crew
+        return next_question
 
-    @listen("customer service")
-    def third_method(self):
-        print("Customer service running")
+    def process_simple_chat(self, translated_query, similar_queries):
+        """
+        Handles simple RAG-based responses.
+        """
+        print("[INFO] Processing Simple Chat using RAG...")
+        return SimpleRagCrew().crew().kickoff(inputs={"query": translated_query, "list_messages": similar_queries})
 
-    @listen("complete the form")
-    def fourth_method(self):
-        print("Complete the form running")
+    def send_email(self):
+        """
+        Handles email sending after form completion.
+        """
+        print("[INFO] Sending email with completed form...")
+        return {"message": "Email Sent Successfully!"}
 
-    @listen("simple chat")
-    def fifth_method(self):
-        result = (
-            SimpleRagCrew()
-            .crew()
-            .kickoff(inputs={
-                "query": "How are you?"
-            })
-        )
-        print('result', result.raw)
 
 def kickoff():
-    poem_flow = RagFlow()
-    poem_flow.kickoff()
+    print("[INFO] Kicking off the RagFlow process...")
+    flow = RagFlow()
+    flow.kickoff()
 
-kickoff()
+
+if __name__ == "__main__":
+    kickoff()

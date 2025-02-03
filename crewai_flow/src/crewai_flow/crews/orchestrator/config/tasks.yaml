@@ -1,0 +1,36 @@
+processing_task:
+  description: >
+    - Our chatbot has received the following query: **{query}**.  
+    - The query is part of an ongoing conversation containing these messages: **{list_messages}**.  
+    - Your task is to:
+      - Detect the original language of the query.
+      - Translate the query into English while considering the overall chat flow.
+      - Identify and select the most relevant message from the provided messages, if applicable.
+
+  expected_output: >
+    A Pydantic model containing:
+      - The detected original query language.
+      - The translated query in English.
+      - The most relevant message from the provided messages, if applicable.
+
+  agent: processing_agent
+
+orchestrator_task:
+  description: >
+    - Analyze the chat conversation and determine which crew should handle the next step.  
+    - The conversation contains the following messages: **{list_messages}**.  
+    - Your task is to:
+      - Analyze all messages to determine if the user intends to fill a form or is engaged in casual conversation.
+      - If the user’s intent is general chatting, assign **"simple chat"** as the next crew.  
+      - If the conversation suggests form completion, assign **"form filler"** as the next crew and specify the form type.  
+      - Available form types:
+        - **scheduled_meeting** → If the user is requesting to schedule a meeting.  
+        - **buy_house** → If the user is selecting a house and wants to proceed with purchasing it.  
+
+  expected_output: >
+    A Pydantic model containing:
+      - The selected next crew (**"simple chat"** or **"form filler"**).
+      - The identified form type (only if "form filler" is selected).  
+
+  agent: orchestrator_agent
+

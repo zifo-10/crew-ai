@@ -4,7 +4,7 @@ from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 
-os.environ["OPENAI_API_KEY"] = "***********************"
+os.environ["OPENAI_API_KEY"] = "****************************"
 
 basic_llm = LLM(model="gpt-4o", temperature=0)
 
